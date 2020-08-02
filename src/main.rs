@@ -30,13 +30,13 @@ fn main() {
     let upper_left = parse_complex(&args[3]).expect("error parsing upper left corner point");
     let lower_right = parse_complex(&args[4]).expect("error parsing lower right corner point");
 
-    let mut pixels = vec![0; bounds.0 * bounds.1];
+    let mut pixels = ImageBuffer::new(bounds.0, bounds.1);
 
     let threads = num_cpus::get();
     let rows_per_band = bounds.1 / threads + 1;
 
     {
-        let bands: Vec<&mut [u8]> = pixels.chunks_mut(rows_per_band * bounds.0).collect();
+        let bands: Vec<&mut [u8]> = pixels.buf.chunks_mut(rows_per_band * bounds.0).collect();
         crossbeam::scope(|s| {
             for (i, band) in bands.into_iter().enumerate() {
                 let top = rows_per_band * i;
@@ -54,7 +54,23 @@ fn main() {
         .unwrap();
     }
 
-    write_image(&args[1], &pixels, bounds).expect("error writing PNG file");
+    write_image(&args[1], &pixels).expect("error writing PNG file");
+}
+
+struct ImageBuffer {
+    rows: usize,
+    cols: usize,
+    buf: Vec<u8>,
+}
+
+impl ImageBuffer {
+    fn new(rows: usize, cols: usize) -> ImageBuffer {
+        ImageBuffer {
+            rows,
+            cols,
+            buf: vec![0; rows * cols],
+        }
+    }
 }
 
 /// Parse a pair of floating-point numbers separated by a comma as a complex number.
@@ -150,14 +166,15 @@ fn render(
     }
 }
 
-fn write_image(
-    filename: &str,
-    pixels: &[u8],
-    bounds: (usize, usize),
-) -> Result<(), Box<dyn Error>> {
+fn write_image(filename: &str, pixels: &ImageBuffer) -> Result<(), Box<dyn Error>> {
     let output = File::create(filename)?;
     let encoder = PNGEncoder::new(output);
-    encoder.encode(&pixels, bounds.0 as u32, bounds.1 as u32, ColorType::L8)?;
+    encoder.encode(
+        &pixels.buf,
+        pixels.rows as u32,
+        pixels.cols as u32,
+        ColorType::L8,
+    )?;
 
     Ok(())
 }
