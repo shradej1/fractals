@@ -7,7 +7,7 @@ pub struct ImageBuffer {
 }
 
 impl ImageBuffer {
-    fn new(rows: usize, cols: usize) -> ImageBuffer {
+    pub fn new(rows: usize, cols: usize) -> ImageBuffer {
         ImageBuffer {
             rows,
             cols,
