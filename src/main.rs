@@ -1,11 +1,11 @@
 use image::png::PNGEncoder;
 use image::ColorType;
+use mandelbrot::{write_buffer, ImageBuffer};
 use num::Complex;
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::str::FromStr;
-use mandelbrot::{ImageBuffer, write_buffer};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();

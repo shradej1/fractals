@@ -83,7 +83,11 @@ fn escape_time(c: Complex<f64>, limit: u32) -> Option<u32> {
     None
 }
 
-pub fn write_buffer(bounds: (usize, usize), upper_left: Complex<f64>, lower_right: Complex<f64>) -> ImageBuffer {
+pub fn write_buffer(
+    bounds: (usize, usize),
+    upper_left: Complex<f64>,
+    lower_right: Complex<f64>,
+) -> ImageBuffer {
     let mut pixels = ImageBuffer::new(bounds.0, bounds.1);
 
     let threads = num_cpus::get();
@@ -105,7 +109,7 @@ pub fn write_buffer(bounds: (usize, usize), upper_left: Complex<f64>, lower_righ
                 });
             }
         })
-            .unwrap();
+        .unwrap();
     }
     pixels
 }

@@ -1,13 +1,16 @@
 use glutin_window::GlutinWindow as Window;
+use graphics::math::{identity, scale, translate};
+use graphics::rectangle::{rectangle_by_corners, square};
+use mandelbrot::{pixel_to_point, write_buffer, ImageBuffer};
+use num::Complex;
 use opengl_graphics::{GlGraphics, OpenGL, Texture, TextureSettings};
 use piston::event_loop::{EventSettings, Events};
 use piston::input::{RenderArgs, RenderEvent, UpdateArgs, UpdateEvent};
 use piston::window::WindowSettings;
-use mandelbrot::{ImageBuffer, write_buffer, pixel_to_point};
-use graphics::math::{identity, translate, scale};
-use num::Complex;
-use graphics::rectangle::{square, rectangle_by_corners};
-use piston::{Event, CursorEvent, Input, Button, ButtonState, MouseCursorEvent, ButtonEvent, ButtonArgs, MouseButton, EventLoop, Key};
+use piston::{
+    Button, ButtonArgs, ButtonEvent, ButtonState, CursorEvent, Event, EventLoop, Input, Key,
+    MouseButton, MouseCursorEvent,
+};
 
 pub struct App {
     /// OpenGL drawing backend
@@ -28,9 +31,20 @@ impl App {
     fn render(&mut self, args: &RenderArgs) {
         use graphics::*;
 
-        let image = Image::new().rect(rectangle_by_corners(0.0, 0.0, self.buff.rows as f64, self.buff.cols as f64));
+        let image = Image::new().rect(rectangle_by_corners(
+            0.0,
+            0.0,
+            self.buff.rows as f64,
+            self.buff.cols as f64,
+        ));
         let texture_set = TextureSettings::new().convert_gamma(true);
-        let im = Texture::from_memory_alpha(&self.buff.buf, self.buff.rows as u32, self.buff.cols as u32, &texture_set).unwrap();
+        let im = Texture::from_memory_alpha(
+            &self.buff.buf,
+            self.buff.rows as u32,
+            self.buff.cols as u32,
+            &texture_set,
+        )
+        .unwrap();
 
         const GREEN_TRANS: types::Color = [0.0, 1.0, 0.0, 1.0];
         let (selection_start, selection_end) = (self.selection_start, self.selection_end);
@@ -65,8 +79,18 @@ impl App {
         // zoom the image
         if let Some([a, b, c, d]) = self.zoom_to {
             let [x0, y0, w, h] = rectangle_by_corners(a, b, c, d);
-            let upper_left = pixel_to_point(self.image_size, (x0 as usize, y0 as usize), self.upper_left, self.lower_right);
-            let lower_right = pixel_to_point(self.image_size, ((x0 + w) as usize, (y0 + h) as usize), self.upper_left, self.lower_right);
+            let upper_left = pixel_to_point(
+                self.image_size,
+                (x0 as usize, y0 as usize),
+                self.upper_left,
+                self.lower_right,
+            );
+            let lower_right = pixel_to_point(
+                self.image_size,
+                ((x0 + w) as usize, (y0 + h) as usize),
+                self.upper_left,
+                self.lower_right,
+            );
 
             self.buff = write_buffer(self.image_size, upper_left, lower_right);
             self.upper_left = upper_left;
@@ -131,10 +155,17 @@ fn main() {
             }
         }
 
-        if let Some(ButtonArgs { state, button, scancode }) = e.button_args() {
+        if let Some(ButtonArgs {
+            state,
+            button,
+            scancode,
+        }) = e.button_args()
+        {
             if button == Button::Mouse(MouseButton::Left) {
                 match state {
-                    ButtonState::Press => { app.selection_start = curr_mouse_pos; }
+                    ButtonState::Press => {
+                        app.selection_start = curr_mouse_pos;
+                    }
                     ButtonState::Release => {
                         if let (Some(start), Some(end)) = (app.selection_start, app.selection_end) {
                             app.zoom_to = Some([start[0], start[1], end[0], end[1]]);
